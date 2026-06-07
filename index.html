@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetMap Pro // Infrastructure & Routing Architect</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-deep: #0a0e17;
+            --surface-1: #111827;
+            --surface-2: #1a2235;
+            --border-tech: #2d4a6e;
+            --accent-cyan: #00d4ff;
+            --accent-purple: #7c3aed;
+            --accent-emerald: #10b981;
+            --accent-red: #ef4444;
+            --text-main: #e2e8f0;
+            --text-muted: #64748b;
+            
+            --header-h: 52px;
+            --sidebar-w: 264px;
+            --inspector-w: 300px;
+            --footer-h: 26px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            overflow: hidden;
+            height: 100vh;
+            display: grid;
+            grid-template-rows: var(--header-h) 1fr var(--footer-h);
+            grid-template-columns: var(--sidebar-w) 1fr auto;
+            grid-template-areas: 
+                "header header header"
+                "sidebar canvas inspector"
+                "footer footer footer";
+        }
+
+        /* --- HEADER --- */
+        header {
+            grid-area: header;
+            background-color: var(--surface-1);
+            border-bottom: 1px solid var(--border-tech);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            z-index: 10;
+        }
+
+        .brand {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 18px;
+            letter-spacing: -0.5px;
+            color: #fff;
+        }
+
+        .brand span {
+            color: var(--accent-cyan);
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            border: 1px solid var(--accent-cyan);
+            padding: 1px 4px;
+            border-radius: 3px;
+            margin-left: 6px;
+        }
+
+        .global-tools {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* --- UI ELEMENTS --- */
+        .btn {
+            background-color: var(--surface-2);
+            border: 1px solid var(--border-tech);
+            color: var(--text-main);
+            padding: 6px 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            border-color: var(--accent-cyan);
+            color: #fff;
+            box-shadow: 0 0 8px rgba(0, 212, 255, 0.2);
+        }
+
+        .btn-primary {
+            background-color: rgba(0, 212, 255, 0.1);
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-cyan);
+            color: var(--bg-deep);
+        }
+
+        .btn-danger {
+            border-color: var(--accent-red);
+            color: var(--accent-red);
+        }
+        .btn-danger:hover {
+            background-color: var(--accent-red);
+            color: #fff;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: 0; top: 0; opacity: 0; font-size: 100px; cursor: pointer;
+        }
+
+        /* --- SIDEBAR LEFT --- */
+        sidebar {
+            grid-area: sidebar;
+            background-color: var(--surface-1);
+            border-right: 1px solid var(--border-tech);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+            z-index: 9;
+        }
+
+        .sidebar-section-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            border-bottom: 1px dashed rgba(45, 74, 110, 0.3);
+            padding-bottom: 4px;
+        }
+
+        .mode-selector {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+        }
+
+        .btn-mode {
+            padding: 8px 4px;
+            font-size: 10px;
+            justify-content: center;
+        }
+
+        .btn-mode.active {
+            background-color: var(--accent-cyan);
+            color: var(--bg-deep);
+            border-color: var(--accent-cyan);
+        }
+        
+        .btn-mode-danger.active {
+            background-color: var(--accent-red);
+            color: #fff;
+            border-color: var(--accent-red);
+        }
+
+        .switch-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: var(--surface-2);
+            padding: 8px 12px;
+            border: 1px solid rgba(45, 74, 110, 0.2);
+            margin-bottom: 4px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 34px;
+            height: 18px;
+        }
+
+        .switch input { opacity: 0; width: 0; height: 0; }
+
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #334155; transition: .2s; border-radius: 18px;
+        }
+
+        .slider:before {
+            position: absolute; content: ""; height: 12px; width: 12px;
+            left: 3px; bottom: 3px; background-color: white; transition: .2s; border-radius: 50%;
+        }
+
+        input:checked + .slider { background-color: var(--accent-emerald); }
+        input:checked + .slider:before { transform: translateX(16px); }
+
+        .catalog-grid { display: flex; flex-direction: column; gap: 6px; }
+        .asset-btn { justify-content: space-between; background-color: var(--surface-2); }
+
+        /* --- WORKSPACE WINDOW (MOLDURA COM ROLAGEM INFINITA) --- */
+        .workspace {
+            grid-area: canvas;
+            position: relative;
+            overflow: auto; /* Ativa as barras de rolagem para o Canvas Gigante */
+            background-color: #05070b;
+        }
+
+        /* Customização Estilizada das Barras de Rolagem do Canvas */
+        .workspace::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        .workspace::-webkit-scrollbar-track {
+            background: var(--bg-deep);
+        }
+        .workspace::-webkit-scrollbar-thumb {
+            background: var(--surface-2);
+            border: 2px solid var(--bg-deep);
+        }
+        .workspace::-webkit-scrollbar-thumb:hover {
+            background: var(--border-tech);
+        }
+
+        canvas {
+            display: block;
+            background-color: var(--bg-deep);
+            background-image: radial-gradient(rgba(45, 74, 110, 0.25) 1px, transparent 1px);
+            background-size: 28px 28px;
+        }
+
+        /* --- INSPECTOR SIDEBAR (RIGHT) --- */
+        inspector {
+            grid-area: inspector;
+            background-color: var(--surface-1);
+            border-left: 1px solid var(--border-tech);
+            width: 0;
+            opacity: 0;
+            overflow-x: hidden;
+            overflow-y: auto;
+            transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            z-index: 9;
+        }
+
+        inspector.visible {
+            width: var(--inspector-w);
+            padding: 16px;
+            opacity: 1;
+        }
+
+        .device-info-card {
+            background: var(--surface-2);
+            border: 1px solid var(--border-tech);
+            padding: 12px;
+        }
+
+        .device-info-card input {
+            background: var(--bg-deep);
+            border: 1px solid var(--border-tech);
+            color: #fff;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 4px 8px;
+            width: 100%;
+            margin-top: 4px;
+        }
+
+        .port-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .port-box {
+            background: var(--bg-deep);
+            border: 1px solid var(--border-tech);
+            padding: 6px 2px;
+            text-align: center;
+            font-size: 10px;
+        }
+
+        .port-box.connected {
+            background: rgba(0, 212, 255, 0.12);
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        .connection-list {
+            margin-top: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .connection-item {
+            background: rgba(16, 185, 129, 0.05);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            padding: 8px;
+            font-size: 11px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-disconnect {
+            background: transparent; border: none; color: var(--accent-red); cursor: pointer;
+        }
+
+        /* --- FOOTER --- */
+        footer {
+            grid-area: footer;
+            background-color: var(--surface-1);
+            border-top: 1px solid var(--border-tech);
+            padding: 0 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 10px;
+            color: var(--text-muted);
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand">NETMAP PRO <span>v4.0_INFINITE</span></div>
+        <div class="global-tools">
+            <div class="file-input-wrapper">
+                <button class="btn">📂 Upload Planta Baixa</button>
+                <input type="file" id="blueprintUpload" accept="image/*" />
+            </div>
+            <button class="btn btn-primary" onclick="App.exportProject()">💾 Salvar Projeto</button>
+            <div class="file-input-wrapper">
+                <button class="btn" style="border-color: var(--accent-emerald)">📥 Carregar Projeto</button>
+                <input type="file" id="projectLoad" accept=".json" />
+            </div>
+            <button class="btn btn-danger" onclick="App.clearCanvas()">Limpar Tudo</button>
+        </div>
+    </header>
+
+    <sidebar>
+        <div>
+            <div class="sidebar-section-title">Modo de Operação</div>
+            <div class="mode-selector">
+                <button class="btn btn-mode active" id="mode-select" onclick="App.setMode('select')">➔ Ponteiro</button>
+                <button class="btn btn-mode" id="mode-wall" onclick="App.setMode('wall')">🧱 Paredes</button>
+                <button class="btn btn-mode" id="mode-rect" onclick="App.setMode('rect')">🟩 Áreas</button>
+                <button class="btn btn-mode" id="mode-link" onclick="App.setMode('link')">⚡ Linkar</button>
+                <button class="btn btn-mode btn-mode-danger" id="mode-eraser" onclick="App.setMode('eraser')" style="grid-column: span 2; margin-top: 4px;">❌ Apagador de Linhas</button>
+            </div>
+        </div>
+
+        <div>
+            <div class="sidebar-section-title">Camadas de Visibilidade</div>
+            <div class="switch-item">
+                <span>Construção / Planta</span>
+                <label class="switch">
+                    <input type="checkbox" id="layer-construction" checked onchange="App.toggleLayer('construction')">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="switch-item">
+                <span>Ativos / Dispositivos</span>
+                <label class="switch">
+                    <input type="checkbox" id="layer-devices" checked onchange="App.toggleLayer('devices')">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="switch-item">
+                <span>Links / Cabeamento</span>
+                <label class="switch">
+                    <input type="checkbox" id="layer-links" checked onchange="App.toggleLayer('links')">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <div>
+            <div class="sidebar-section-title">Catálogo de Ativos</div>
+            <div class="catalog-grid" id="catalogContainer">
+                <div style="color:var(--text-muted); font-size:10px; font-style:italic;">Carregando...</div>
+            </div>
+        </div>
+    </sidebar>
+
+    <div class="workspace" id="workspaceContainer">
+        <canvas id="netCanvas" width="4000" height="3000"></canvas>
+    </div>
+
+    <inspector id="inspectorPanel"></inspector>
+
+    <footer>
+        <div class="sys-log" id="systemLog">[SYSTEM]: Inicializando ecossistema infinito...</div>
+        <div class="coords" id="coordDisplay">X: 0000 // Y: 0000</div>
+    </footer>
+
+    <script>
+        const State = {
+            gridSize: 28,
+            currentMode: 'select',
+            layers: { construction: true, devices: true, links: true },
+            catalog: [], // Populado dinamicamente via catalogo_gemini.json
+            project: {
+                blueprintData: null,
+                walls: [],     
+                devices: [],
+                links: []
+            },
+            runtime: {
+                blueprintImage: null,
+                selectedDevice: null,
+                draggedDevice: null,
+                dragOffset: { x: 0, y: 0 },
+                activeWallStart: null,
+                activeRectStart: null,
+                activeLinkSource: null, 
+                mouseCanvasPos: { x: 0, y: 0 }
+            }
+        };
+
+        const App = {
+            ctx: null,
+            canvas: null,
+
+            init() {
+                this.canvas = document.getElementById('netCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                
+                this.setupHighDPI();
+                this.registerEvents();
+                this.loadExternalCatalog(); // Aciona pipeline AJAX
+                this.updateInspector();
+                this.loop();
+            },
+
+            setupHighDPI() {
+                // Mantém a proporção nítida em telas Retina operando em 4000x3000 nativos
+                const dpr = window.devicePixelRatio || 1;
+                this.canvas.width = 4000 * dpr;
+                this.canvas.height = 3000 * dpr;
+                this.canvas.style.width = "4000px";
+                this.canvas.style.height = "3000px";
+                this.ctx.scale(dpr, dpr);
+            },
+
+            // --- PIPELINE DE LEITURA DO ARQUIVO EXTERNO catalogo_gemini.json ---
+            async loadExternalCatalog() {
+                try {
+                    const response = await fetch('catalogo_gemini.json');
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    
+                    State.catalog = await response.json();
+                    this.renderCatalog();
+                    this.log("Catálogo corporativo sincronizado via 'catalogo_gemini.json'.");
+                } catch (error) {
+                    this.log("Falha ao puxar 'catalogo_gemini.json'. Usando catálogo de contingência local.", "danger");
+                    // Fallback estrutural se o arquivo não for achado ou der erro de CORS local
+                    State.catalog = [
+                        { "Tipo": "Controladora Fallback", "Portas": 8, "Color": "#7c3aed" },
+                        { "Tipo": "Switch PoE 24p", "Portas": 24, "Color": "#00d4ff" },
+                        { "Tipo": "Access Point Wi-Fi 6", "Portas": 1, "Radius": 185, "Color": "#10b981" }
+                    ];
+                    this.renderCatalog();
+                }
+            },
+
+            log(msg, type = 'system') {
+                document.getElementById('systemLog').innerText = `[${type.toUpperCase()}]: ${msg}`;
+            },
+
+            setMode(mode) {
+                State.currentMode = mode;
+                document.querySelectorAll('.btn-mode').forEach(b => b.classList.remove('active'));
+                document.getElementById(`mode-${mode}`).classList.add('active');
+                
+                State.runtime.activeWallStart = null;
+                State.runtime.activeRectStart = null;
+                State.runtime.activeLinkSource = null;
+                
+                if(mode !== 'select') {
+                    State.runtime.selectedDevice = null;
+                    this.updateInspector();
+                }
+                this.log(`Modo alterado para: ${mode.toUpperCase()}`);
+            },
+
+            toggleLayer(layer) {
+                State.layers[layer] = document.getElementById(`layer-${layer}`).checked;
+            },
+
+            snap(val) {
+                return Math.round(val / State.gridSize) * State.gridSize;
+            },
+
+            renderCatalog() {
+                const container = document.getElementById('catalogContainer');
+                container.innerHTML = '';
+                State.catalog.forEach(item => {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn asset-btn';
+                    btn.onclick = () => this.addAssetToCanvas(item);
+                    btn.innerHTML = `<span>🖥️ ${item.Tipo}</span><span class="badge" style="background:rgba(0,212,255,0.1); padding:2px 6px; border-radius:10px;">${item.Portas}P</span>`;
+                    container.appendChild(btn);
+                });
+            },
+
+            addAssetToCanvas(proto) {
+                const scrollWrapper = document.getElementById('workspaceContainer');
+                
+                // Calcula o centro baseado na rolagem atual do usuário no mapa gigante
+                const targetX = this.snap(scrollWrapper.scrollLeft + (scrollWrapper.clientWidth / 2));
+                const targetY = this.snap(scrollWrapper.scrollTop + (scrollWrapper.clientHeight / 2));
+
+                const newDevice = {
+                    id: 'dev_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                    type: proto.Tipo,
+                    color: proto.Color,
+                    radius: proto.Radius || null,
+                    ports: proto.Portas,
+                    x: targetX,
+                    y: targetY,
+                    label: `${proto.Tipo.split(' ')[0]}_${State.project.devices.length + 1}`
+                };
+                State.project.devices.push(newDevice);
+                this.setMode('select');
+                State.runtime.selectedDevice = newDevice;
+                this.updateInspector();
+            },
+
+            deleteDevice(id) {
+                const dev = State.project.devices.find(d => d.id === id);
+                if (dev && confirm(`Deseja remover o dispositivo ${dev.label}?`)) {
+                    State.project.links = State.project.links.filter(l => l.fromId !== id && l.toId !== id);
+                    State.project.devices = State.project.devices.filter(d => d.id !== id);
+                    State.runtime.selectedDevice = null;
+                    this.updateInspector();
+                }
+            },
+
+            updateInspector() {
+                const panel = document.getElementById('inspectorPanel');
+                const dev = State.runtime.selectedDevice;
+
+                if (!dev || State.currentMode !== 'select') {
+                    panel.classList.remove('visible');
+                    return;
+                }
+
+                panel.classList.add('visible');
+                const deviceLinks = State.project.links.filter(l => l.fromId === dev.id || l.toId === dev.id);
+
+                let html = `
+                    <div>
+                        <div class="sidebar-section-title">Ações do Ativo</div>
+                        <button class="btn btn-danger" style="width:100%; justify-content:center; margin-bottom:12px;" onclick="App.deleteDevice('${dev.id}')">🗑️ Remover Dispositivo</button>
+                        
+                        <div class="sidebar-section-title">Propriedades</div>
+                        <div class="device-info-card">
+                            <label style="color: var(--text-muted); font-size:10px;">TAG IDENTIFICADORA</label>
+                            <input type="text" value="${dev.label}" oninput="App.updateDeviceLabel('${dev.id}', this.value)">
+                            <div style="margin-top:10px; font-size:11px; color: var(--accent-cyan)">Arquitetura: ${dev.type}</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="sidebar-section-title">Portas Físicas Mapeadas</div>
+                        <div class="port-grid">
+                `;
+
+                for (let i = 1; i <= dev.ports; i++) {
+                    const isPortConnected = deviceLinks.some(l => (l.fromId === dev.id && l.fromPort === i) || (l.toId === dev.id && l.toPort === i));
+                    let cName = 'port-box';
+                    if (isPortConnected) cName += ' connected';
+
+                    html += `<div class="${cName}">P${String(i).padStart(2, '0')}</div>`;
+                }
+
+                html += `
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="sidebar-section-title">Roteamento Logístico</div>
+                        <div class="connection-list">
+                `;
+
+                if (deviceLinks.length === 0) {
+                    html += `<div style="color: var(--text-muted); font-size:11px; font-style:italic;">Nenhum cabo trançado.</div>`;
+                } else {
+                    deviceLinks.forEach(link => {
+                        const targetIsTo = link.fromId === dev.id;
+                        const localPort = targetIsTo ? link.fromPort : link.toPort;
+                        const targetId = targetIsTo ? link.toId : link.fromId;
+                        const targetPort = targetIsTo ? link.toPort : link.fromPort;
+                        const targetDevice = State.project.devices.find(d => d.id === targetId);
+                        const targetLabel = targetDevice ? targetDevice.label : 'Desconhecido';
+
+                        html += `
+                            <div class="connection-item">
+                                <div>
+                                    <span style="color: var(--accent-cyan)">P.${localPort}</span> ➔ <span>${targetLabel} [P.${targetPort}]</span>
+                                </div>
+                                <button class="btn-disconnect" onclick="App.removeLink('${link.id}')">✕</button>
+                            </div>
+                        `;
+                    });
+                }
+
+                html += `</div></div>`;
+                panel.innerHTML = html;
+            },
+
+            updateDeviceLabel(id, val) {
+                const dev = State.project.devices.find(d => d.id === id);
+                if (dev) dev.label = val;
+            },
+
+            removeLink(linkId) {
+                State.project.links = State.project.links.filter(l => l.id !== linkId);
+                this.updateInspector();
+            },
+
+            clearCanvas() {
+                if (confirm("Limpar toda a infraestrutura desenhada?")) {
+                    State.project.walls = []; State.project.devices = []; State.project.links = [];
+                    State.project.blueprintData = null; State.runtime.blueprintImage = null; State.runtime.selectedDevice = null;
+                    this.updateInspector();
+                }
+            },
+
+            exportProject() {
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(State.project));
+                const downloadAnchor = document.createElement('a');
+                downloadAnchor.setAttribute("href", dataStr);
+                downloadAnchor.setAttribute("download", "infra_completa.json");
+                document.body.appendChild(downloadAnchor);
+                downloadAnchor.click(); downloadAnchor.remove();
+            },
+
+            importProject(jsonData) {
+                try {
+                    const parsed = JSON.parse(jsonData);
+                    if (parsed.devices && parsed.links) {
+                        State.project = parsed;
+                        State.runtime.selectedDevice = null;
+                        if (State.project.blueprintData) {
+                            const img = new Image();
+                            img.onload = () => { State.runtime.blueprintImage = img; };
+                            img.src = State.project.blueprintData;
+                        }
+                        this.updateInspector();
+                        this.log("Projeto carregado com sucesso.");
+                    }
+                } catch (e) { this.log("Estrutura do arquivo JSON inválida.", "danger"); }
+            },
+
+            registerEvents() {
+                const canvas = this.canvas;
+
+                document.getElementById('blueprintUpload').addEventListener('change', (e) => {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const img = new Image();
+                        img.onload = () => { State.runtime.blueprintImage = img; State.project.blueprintData = event.target.result; };
+                        img.src = event.target.result;
+                    };
+                    if (e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
+                });
+
+                document.getElementById('projectLoad').addEventListener('change', (e) => {
+                    const reader = new FileReader();
+                    reader.onload = (event) => this.importProject(event.target.result);
+                    if (e.target.files[0]) reader.readAsText(event.target.files[0]);
+                });
+
+                canvas.addEventListener('mousemove', (e) => {
+                    const rect = canvas.getBoundingClientRect();
+                    const mouseX = e.clientX - rect.left;
+                    const mouseY = e.clientY - rect.top;
+                    State.runtime.mouseCanvasPos = { x: mouseX, y: mouseY };
+                    
+                    document.getElementById('coordDisplay').innerText = `X: ${String(Math.round(mouseX)).padStart(4, '0')} // Y: ${String(Math.round(mouseY)).padStart(4, '0')}`;
+
+                    if (State.currentMode === 'select' && State.runtime.draggedDevice) {
+                        State.runtime.draggedDevice.x = this.snap(mouseX - State.runtime.dragOffset.x);
+                        State.runtime.draggedDevice.y = this.snap(mouseY - State.runtime.dragOffset.y);
+                    }
+                });
+
+                canvas.addEventListener('mousedown', (e) => {
+                    const rect = canvas.getBoundingClientRect();
+                    const mouseX = e.clientX - rect.left;
+                    const mouseY = e.clientY - rect.top;
+
+                    let clickedDevice = null;
+                    if (State.layers.devices) {
+                        for (let dev of State.project.devices) {
+                            if (Math.hypot(mouseX - dev.x, mouseY - dev.y) < 22) {
+                                clickedDevice = dev;
+                                break;
+                            }
+                        }
+                    }
+
+                    // MODO APAGADOR 
+                    if (State.currentMode === 'eraser' && State.layers.construction) {
+                        const wallIndex = State.project.walls.findIndex(w => {
+                            const A = mouseX - w.x1; const B = mouseY - w.y1;
+                            const C = w.x2 - w.x1; const D = w.y2 - w.y1;
+                            const dot = A * C + B * D;
+                            const len_sq = C * C + D * D;
+                            let param = -1;
+                            if (len_sq !== 0) param = dot / len_sq;
+
+                            let xx, yy;
+                            if (param < 0) { xx = w.x1; yy = w.y1; }
+                            else if (param > 1) { xx = w.x2; yy = w.y2; }
+                            else { xx = w.x1 + param * C; yy = w.y1 + param * D; }
+
+                            const dist = Math.hypot(mouseX - xx, mouseY - yy);
+                            return dist < 8; 
+                        });
+
+                        if (wallIndex !== -1) {
+                            State.project.walls.splice(wallIndex, 1);
+                            this.log("Segmento de parede removido.");
+                            return;
+                        }
+                    }
+
+                    // MODO PONTEIRO
+                    if (State.currentMode === 'select') {
+                        if (clickedDevice) {
+                            State.runtime.selectedDevice = clickedDevice;
+                            State.runtime.draggedDevice = clickedDevice;
+                            State.runtime.dragOffset = { x: mouseX - clickedDevice.x, y: mouseY - clickedDevice.y };
+                        } else {
+                            State.runtime.selectedDevice = null; 
+                        }
+                        this.updateInspector();
+                    }
+
+                    // MODO PAREDES
+                    if (State.currentMode === 'wall' && State.layers.construction) {
+                        const sx = this.snap(mouseX); const sy = this.snap(mouseY);
+                        if (!State.runtime.activeWallStart) {
+                            State.runtime.activeWallStart = { x: sx, y: sy };
+                        } else {
+                            if (State.runtime.activeWallStart.x !== sx || State.runtime.activeWallStart.y !== sy) {
+                                State.project.walls.push({ x1: State.runtime.activeWallStart.x, y1: State.runtime.activeWallStart.y, x2: sx, y2: sy });
+                            }
+                            State.runtime.activeWallStart = { x: sx, y: sy };
+                        }
+                    }
+
+                    // MODO ÁREAS
+                    if (State.currentMode === 'rect' && State.layers.construction) {
+                        const sx = this.snap(mouseX); const sy = this.snap(mouseY);
+                        if (!State.runtime.activeRectStart) {
+                            State.runtime.activeRectStart = { x: sx, y: sy };
+                        } else {
+                            const x1 = State.runtime.activeRectStart.x;
+                            const y1 = State.runtime.activeRectStart.y;
+                            const x2 = sx;
+                            const y2 = sy;
+
+                            if (x1 !== x2 && y1 !== y2) {
+                                State.project.walls.push({ x1: x1, y1: y1, x2: x2, y2: y1 }); 
+                                State.project.walls.push({ x1: x2, y1: y1, x2: x2, y2: y2 }); 
+                                State.project.walls.push({ x1: x2, y1: y2, x2: x1, y2: y2 }); 
+                                State.project.walls.push({ x1: x1, y1: y2, x2: x1, y2: y1 }); 
+                                this.log("Paredes modulares do cômodo estabelecidas.");
+                            }
+                            State.runtime.activeRectStart = null;
+                        }
+                    }
+
+                    // MODO LINKAR
+                    if (State.currentMode === 'link' && clickedDevice) {
+                        if (!State.runtime.activeLinkSource) {
+                            State.runtime.activeLinkSource = clickedDevice;
+                        } else {
+                            const src = State.runtime.activeLinkSource;
+                            if (src.id !== clickedDevice.id) {
+                                const pSrcStr = prompt(`Conexão saindo de ${src.label} (Total: ${src.ports} portas).\nPorta de ORIGEM:`, "1");
+                                const pDstStr = prompt(`Conexão chegando em ${clickedDevice.label} (Total: ${clickedDevice.ports} portas).\nPorta de DESTINO:`, "1");
+                                
+                                const pSrc = parseInt(pSrcStr); const pDst = parseInt(pDstStr);
+
+                                if (pSrc >= 1 && pSrc <= src.ports && pDst >= 1 && pDst <= clickedDevice.ports) {
+                                    State.project.links.push({
+                                        id: 'link_' + Date.now(), fromId: src.id, fromPort: pSrc, toId: clickedDevice.id, toPort: pDst
+                                    });
+                                }
+                            }
+                            State.runtime.activeLinkSource = null;
+                            this.setMode('select');
+                        }
+                    }
+                });
+
+                window.addEventListener('mouseup', () => { State.runtime.draggedDevice = null; });
+                window.addEventListener('keydown', (e) => { if (e.key === 'Escape') { State.runtime.activeWallStart = null; State.runtime.activeRectStart = null; State.runtime.activeLinkSource = null; this.updateInspector(); } });
+            },
+
+            loop() {
+                App.render();
+                requestAnimationFrame(App.loop);
+            },
+
+            render() {
+                const ctx = this.ctx;
+                ctx.clearRect(0, 0, 4000, 3000);
+
+                // 1. Planta Baixa
+                if (State.layers.construction && State.runtime.blueprintImage) {
+                    ctx.save(); ctx.globalAlpha = 0.35; ctx.drawImage(State.runtime.blueprintImage, 0, 0); ctx.restore();
+                }
+
+                // 2. Camada Estrutural (Paredes)
+                if (State.layers.construction) {
+                    ctx.lineWidth = 4; ctx.lineCap = "round"; ctx.strokeStyle = varColor('--border-tech');
+                    State.project.walls.forEach(w => { ctx.beginPath(); ctx.moveTo(w.x1, w.y1); ctx.lineTo(w.x2, w.y2); ctx.stroke(); });
+
+                    if (State.currentMode === 'wall' && State.runtime.activeWallStart) {
+                        ctx.lineWidth = 2; ctx.strokeStyle = varColor('--accent-purple'); ctx.setLineDash([4, 4]);
+                        ctx.beginPath(); ctx.moveTo(State.runtime.activeWallStart.x, State.runtime.activeWallStart.y);
+                        ctx.lineTo(this.snap(State.runtime.mouseCanvasPos.x), this.snap(State.runtime.mouseCanvasPos.y));
+                        ctx.stroke(); ctx.setLineDash([]);
+                    }
+
+                    if (State.currentMode === 'rect' && State.runtime.activeRectStart) {
+                        ctx.lineWidth = 2; ctx.strokeStyle = varColor('--accent-emerald'); ctx.setLineDash([4, 4]);
+                        const curW = this.snap(State.runtime.mouseCanvasPos.x) - State.runtime.activeRectStart.x;
+                        const curH = this.snap(State.runtime.mouseCanvasPos.y) - State.runtime.activeRectStart.y;
+                        ctx.strokeRect(State.runtime.activeRectStart.x, State.runtime.activeRectStart.y, curW, curH);
+                        ctx.setLineDash([]);
+                    }
+                }
+
+                // 3. Links / Enlaces
+                if (State.layers.links) {
+                    ctx.lineWidth = 2;
+                    State.project.links.forEach(link => {
+                        const fromNode = State.project.devices.find(d => d.id === link.fromId);
+                        const toNode = State.project.devices.find(d => d.id === link.toId);
+                        
+                        if (fromNode && toNode) {
+                            ctx.beginPath(); ctx.strokeStyle = varColor('--accent-cyan');
+                            ctx.moveTo(fromNode.x, fromNode.y); ctx.lineTo(toNode.x, toNode.y); ctx.stroke();
+
+                            ctx.fillStyle = '#fff'; ctx.font = "bold 9px 'JetBrains Mono'";
+                            const p1X = fromNode.x + (toNode.x - fromNode.x) * 0.22;
+                            const p1Y = fromNode.y + (toNode.y - fromNode.y) * 0.22;
+                            const p2X = fromNode.x + (toNode.x - fromNode.x) * 0.78;
+                            const p2Y = fromNode.y + (toNode.y - fromNode.y) * 0.78;
+
+                            ctx.fillText(`P${link.fromPort}`, p1X, p1Y - 4);
+                            ctx.fillText(`P${link.toPort}`, p2X, p2Y - 4);
+                        }
+                    });
+
+                    if (State.currentMode === 'link' && State.runtime.activeLinkSource) {
+                        ctx.strokeStyle = varColor('--accent-cyan'); ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]);
+                        ctx.beginPath(); ctx.moveTo(State.runtime.activeLinkSource.x, State.runtime.activeLinkSource.y);
+                        ctx.lineTo(State.runtime.mouseCanvasPos.x, State.runtime.mouseCanvasPos.y);
+                        ctx.stroke(); ctx.setLineDash([]);
+                    }
+                }
+
+                // 4. Ativos
+                if (State.layers.devices) {
+                    State.project.devices.forEach(dev => {
+                        const isSelected = State.runtime.selectedDevice && State.runtime.selectedDevice.id === dev.id;
+                        if (dev.radius && isSelected) {
+                            ctx.beginPath(); ctx.arc(dev.x, dev.y, dev.radius, 0, Math.PI * 2);
+                            ctx.fillStyle = hexToRgbA(dev.color, 0.05); ctx.fill();
+                            ctx.strokeStyle = dev.color; ctx.lineWidth = 1; ctx.setLineDash([6, 4]); ctx.stroke(); ctx.setLineDash([]);
+                        }
+                    });
+
+                    State.project.devices.forEach(dev => {
+                        const isSelected = State.runtime.selectedDevice && State.runtime.selectedDevice.id === dev.id;
+                        
+                        ctx.save();
+                        ctx.beginPath(); ctx.arc(dev.x, dev.y, 18, 0, Math.PI * 2);
+                        ctx.fillStyle = varColor('--surface-1'); ctx.fill();
+                        
+                        ctx.lineWidth = isSelected ? 3 : 1.5;
+                        ctx.strokeStyle = isSelected ? varColor('--accent-cyan') : dev.color;
+                        ctx.stroke();
+
+                        ctx.fillStyle = isSelected ? varColor('--accent-cyan') : dev.color;
+                        ctx.font = "bold 9px 'JetBrains Mono'"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+                        const coreLabel = dev.type.split(' ').map(w => w[0]).join('').substring(0, 3).toUpperCase();
+                        ctx.fillText(coreLabel, dev.x, dev.y);
+
+                        ctx.fillStyle = isSelected ? '#fff' : varColor('--text-main');
+                        ctx.font = "bold 10px 'JetBrains Mono'";
+                        ctx.fillText(dev.label, dev.x, dev.y + 32);
+                        ctx.restore();
+                    });
+                }
+            }
+        };
+
+        function varColor(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+        function hexToRgbA(hex, alpha) {
+            let c = hex.substring(1).split('');
+            if (c.length == 3) c = [c[0], c[0], c[1], c[1], c[2], c[2]];
+            c = '0x' + c.join('');
+            return `rgba(${(c >> 16) & 255}, ${(c >> 8) & 255}, ${c & 255}, ${alpha})`;
+        }
+
+        window.onload = () => App.init();
+    </script>
+</body>
+</html>
