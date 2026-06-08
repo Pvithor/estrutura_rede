@@ -1,8 +1,9 @@
 [
   { "Tipo": "Controladora Core", "Portas": 8, "Color": "#7c3aed" },
   { "Tipo": "Switch PoE 24p", "Portas": 24, "Color": "#00d4ff" },
-  { "Tipo": "Access Point Wi-Fi 6", "Portas": 1, "Radius": 185, "Color": "#10b981" },
-  { "Tipo": "Câmera IP 4K", "Portas": 1, "Radius": 130, "Color": "#ef4444" },
-  { "Tipo": "Firewall Enterprise", "Portas": 6, "Color": "#f59e0b" },
-  { "Tipo": "Firewall", "Portas": 2, "Color": "#f59e0b" }
+  { "Tipo": "Switch PoE 16p", "Portas": 16, "Color": "#0ba5ce" },
+  { "Tipo": "Switch PoE 8p", "Portas": 8, "Color": "#2c92ad" },
+  { "Tipo": "Access Point Wi-Fi 6", "Portas": 1, "Radius": 2, "Color": "#10b981" },
+  { "Tipo": "Computador", "Portas": 1, "Color": "#ef4444" },
+  { "Tipo": "Firewall Enterprise", "Portas": 6, "Color": "#f59e0b" }
 ]

@@ -3,11 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="NetMap Pro - Ferramenta profissional para mapeamento de infraestrutura de rede e arquitetura de roteamento">
+    <meta name="keywords" content="network mapping, infrastructure, routing, diagram, Unifi">
+    <meta property="og:title" content="NetMap Pro">
+    <meta property="og:description" content="Infrastructure & Routing Architect">
+    <meta property="og:type" content="website">
     <title>NetMap Pro // Infrastructure & Routing Architect</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 
     <style>
         :root {
@@ -49,6 +54,44 @@
                 "header header header"
                 "sidebar canvas inspector"
                 "footer footer footer";
+        }
+
+        /* --- RESPONSIVIDADE MOBILE --- */
+        @media (max-width: 768px) {
+            body {
+                grid-template-columns: 1fr;
+                grid-template-rows: var(--header-h) auto 1fr auto var(--footer-h);
+                grid-template-areas: 
+                    "header"
+                    "sidebar"
+                    "canvas"
+                    "inspector"
+                    "footer";
+            }
+            
+            sidebar {
+                max-height: 200px;
+                border-right: none;
+                border-bottom: 1px solid var(--border-tech);
+                overflow-x: auto;
+            }
+            
+            inspector.visible {
+                width: 100% !important;
+                max-height: 300px;
+                border-left: none;
+                border-top: 1px solid var(--border-tech);
+            }
+            
+            .global-tools {
+                flex-wrap: wrap;
+                gap: 4px;
+            }
+            
+            .btn {
+                padding: 4px 8px;
+                font-size: 10px;
+            }
         }
 
         /* --- HEADER --- */
@@ -107,6 +150,11 @@
             box-shadow: 0 0 8px rgba(0, 212, 255, 0.2);
         }
 
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         .btn-primary {
             background-color: rgba(0, 212, 255, 0.1);
             border-color: var(--accent-cyan);
@@ -122,6 +170,7 @@
             border-color: var(--accent-red);
             color: var(--accent-red);
         }
+        
         .btn-danger:hover {
             background-color: var(--accent-red);
             color: #fff;
@@ -221,29 +270,18 @@
         .catalog-grid { display: flex; flex-direction: column; gap: 6px; }
         .asset-btn { justify-content: space-between; background-color: var(--surface-2); }
 
-        /* --- WORKSPACE WINDOW (MOLDURA COM ROLAGEM INFINITA) --- */
+        /* --- WORKSPACE INFINITO --- */
         .workspace {
             grid-area: canvas;
             position: relative;
-            overflow: auto; /* Ativa as barras de rolagem para o Canvas Gigante */
+            overflow: auto;
             background-color: #05070b;
         }
 
-        /* Customização Estilizada das Barras de Rolagem do Canvas */
-        .workspace::-webkit-scrollbar {
-            width: 10px;
-            height: 10px;
-        }
-        .workspace::-webkit-scrollbar-track {
-            background: var(--bg-deep);
-        }
-        .workspace::-webkit-scrollbar-thumb {
-            background: var(--surface-2);
-            border: 2px solid var(--bg-deep);
-        }
-        .workspace::-webkit-scrollbar-thumb:hover {
-            background: var(--border-tech);
-        }
+        .workspace::-webkit-scrollbar { width: 10px; height: 10px; }
+        .workspace::-webkit-scrollbar-track { background: var(--bg-deep); }
+        .workspace::-webkit-scrollbar-thumb { background: var(--surface-2); border: 2px solid var(--bg-deep); }
+        .workspace::-webkit-scrollbar-thumb:hover { background: var(--border-tech); }
 
         canvas {
             display: block;
@@ -332,6 +370,47 @@
             background: transparent; border: none; color: var(--accent-red); cursor: pointer;
         }
 
+        /* --- MODAL --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--surface-1);
+            border: 1px solid var(--border-tech);
+            padding: 20px;
+            min-width: 300px;
+            max-width: 500px;
+        }
+
+        .modal-content h3 {
+            margin-bottom: 16px;
+            color: var(--accent-cyan);
+        }
+
+        .modal-content select,
+        .modal-content input {
+            width: 100%;
+            background: var(--bg-deep);
+            border: 1px solid var(--border-tech);
+            color: #fff;
+            padding: 8px;
+            margin-bottom: 12px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
         /* --- FOOTER --- */
         footer {
             grid-area: footer;
@@ -350,18 +429,20 @@
 <body>
 
     <header>
-        <div class="brand">NETMAP PRO <span>v4.0_INFINITE</span></div>
+        <div class="brand">NETMAP PRO <span>v5.0_NOC_CORE</span></div>
         <div class="global-tools">
             <div class="file-input-wrapper">
-                <button class="btn">📂 Upload Planta Baixa</button>
+                <button class="btn">📂 Upload Planta</button>
                 <input type="file" id="blueprintUpload" accept="image/*" />
             </div>
-            <button class="btn btn-primary" onclick="App.exportProject()">💾 Salvar Projeto</button>
+            <button class="btn btn-primary" onclick="App.exportProject()">💾 Salvar</button>
             <div class="file-input-wrapper">
-                <button class="btn" style="border-color: var(--accent-emerald)">📥 Carregar Projeto</button>
+                <button class="btn" style="border-color: var(--accent-emerald)">📥 Carregar</button>
                 <input type="file" id="projectLoad" accept=".json" />
             </div>
-            <button class="btn btn-danger" onclick="App.clearCanvas()">Limpar Tudo</button>
+            <button class="btn" onclick="App.undo()" id="btnUndo">↶ Undo</button>
+            <button class="btn" onclick="App.redo()" id="btnRedo">↷ Redo</button>
+            <button class="btn btn-danger" onclick="App.clearCanvas()">Limpar</button>
         </div>
     </header>
 
@@ -373,7 +454,7 @@
                 <button class="btn btn-mode" id="mode-wall" onclick="App.setMode('wall')">🧱 Paredes</button>
                 <button class="btn btn-mode" id="mode-rect" onclick="App.setMode('rect')">🟩 Áreas</button>
                 <button class="btn btn-mode" id="mode-link" onclick="App.setMode('link')">⚡ Linkar</button>
-                <button class="btn btn-mode btn-mode-danger" id="mode-eraser" onclick="App.setMode('eraser')" style="grid-column: span 2; margin-top: 4px;">❌ Apagador de Linhas</button>
+                <button class="btn btn-mode btn-mode-danger" id="mode-eraser" onclick="App.setMode('eraser')" style="grid-column: span 2; margin-top: 4px;">❌ Apagador</button>
             </div>
         </div>
 
@@ -426,7 +507,7 @@
             gridSize: 28,
             currentMode: 'select',
             layers: { construction: true, devices: true, links: true },
-            catalog: [], // Populado dinamicamente via catalogo_gemini.json
+            catalog: [], 
             project: {
                 blueprintData: null,
                 walls: [],     
@@ -441,36 +522,118 @@
                 activeWallStart: null,
                 activeRectStart: null,
                 activeLinkSource: null, 
-                mouseCanvasPos: { x: 0, y: 0 }
+                mouseCanvasPos: { x: 0, y: 0 },
+                needsRender: true
+            }
+        };
+
+        // --- SISTEMA DE UNDO/REDO ---
+        const History = {
+            stack: [],
+            currentIndex: -1,
+            maxStackSize: 50,
+            
+            push() {
+                this.stack = this.stack.slice(0, this.currentIndex + 1);
+                this.stack.push(JSON.parse(JSON.stringify(State.project)));
+                this.currentIndex++;
+                if (this.stack.length > this.maxStackSize) {
+                    this.stack.shift();
+                    this.currentIndex--;
+                }
+                this.updateButtons();
+            },
+            
+            undo() {
+                if (this.currentIndex > 0) {
+                    this.currentIndex--;
+                    State.project = JSON.parse(JSON.stringify(this.stack[this.currentIndex]));
+                    State.runtime.selectedDevice = null;
+                    App.updateInspector();
+                    App.scheduleRender();
+                    App.log('Undo executado');
+                }
+                this.updateButtons();
+            },
+            
+            redo() {
+                if (this.currentIndex < this.stack.length - 1) {
+                    this.currentIndex++;
+                    State.project = JSON.parse(JSON.stringify(this.stack[this.currentIndex]));
+                    State.runtime.selectedDevice = null;
+                    App.updateInspector();
+                    App.scheduleRender();
+                    App.log('Redo executado');
+                }
+                this.updateButtons();
+            },
+            
+            updateButtons() {
+                document.getElementById('btnUndo').disabled = this.currentIndex <= 0;
+                document.getElementById('btnRedo').disabled = this.currentIndex >= this.stack.length - 1;
             }
         };
 
         const App = {
             ctx: null,
             canvas: null,
+            renderScheduled: false,
 
             init() {
                 this.canvas = document.getElementById('netCanvas');
                 this.ctx = this.canvas.getContext('2d');
                 
-                this.setupHighDPI();
+                this.setupCanvas();
                 this.registerEvents();
-                this.loadExternalCatalog(); // Aciona pipeline AJAX
+                this.loadExternalCatalog(); 
                 this.updateInspector();
-                this.loop();
+
+                const projetoTeste = {
+                    "walls": [
+                        {"x1":140,"y1":140,"x2":560,"y2":140},
+                        {"x1":560,"y1":140,"x2":560,"y2":420},
+                        {"x1":560,"y1":420,"x2":140,"y2":420},
+                        {"x1":140,"y1":420,"x2":140,"y2":140}
+                    ],
+                    "devices": [
+                        {"id":"dev_mock_1","type":"Controladora Core","color":"#7c3aed","ports":8,"portsData":{},"x":224,"y":280,"label":"Controladora_1"},
+                        {"id":"dev_mock_2","type":"Switch PoE 24p","color":"#00d4ff","ports":24,"portsData":{},"x":448,"y":280,"label":"Switch_1"},
+                        {"id":"dev_mock_3","type":"Access Point Wi-Fi 6","color":"#10b981","ports":1,"portsData":{},"x":448,"y":532,"label":"AP_1"}
+                    ],
+                    "links": [
+                        {"id":"link_mock_1","fromId":"dev_mock_1","fromPort":1,"toId":"dev_mock_2","toPort":24},
+                        {"id":"link_mock_2","fromId":"dev_mock_2","fromPort":16,"toId":"dev_mock_3","toPort":1}
+                    ]
+                };
+                this.importProject(JSON.stringify(projetoTeste));
+                History.push();
+                History.updateButtons();
             },
 
-            setupHighDPI() {
-                // Mantém a proporção nítida em telas Retina operando em 4000x3000 nativos
+            setupCanvas() {
                 const dpr = window.devicePixelRatio || 1;
-                this.canvas.width = 4000 * dpr;
-                this.canvas.height = 3000 * dpr;
-                this.canvas.style.width = "4000px";
-                this.canvas.style.height = "3000px";
+                const container = document.getElementById('workspaceContainer');
+                
+                const width = Math.max(container.clientWidth, 2500);
+                const height = Math.max(container.clientHeight, 2500);
+                
+                this.canvas.width = width * dpr;
+                this.canvas.height = height * dpr;
+                this.canvas.style.width = width + 'px';
+                this.canvas.style.height = height + 'px';
                 this.ctx.scale(dpr, dpr);
             },
 
-            // --- PIPELINE DE LEITURA DO ARQUIVO EXTERNO catalogo_gemini.json ---
+            scheduleRender() {
+                if (!this.renderScheduled) {
+                    this.renderScheduled = true;
+                    requestAnimationFrame(() => {
+                        this.render();
+                        this.renderScheduled = false;
+                    });
+                }
+            },
+
             async loadExternalCatalog() {
                 try {
                     const response = await fetch('catalogo_gemini.json');
@@ -478,14 +641,15 @@
                     
                     State.catalog = await response.json();
                     this.renderCatalog();
-                    this.log("Catálogo corporativo sincronizado via 'catalogo_gemini.json'.");
+                    this.log("Catálogo corporativo sincronizado.");
                 } catch (error) {
-                    this.log("Falha ao puxar 'catalogo_gemini.json'. Usando catálogo de contingência local.", "danger");
-                    // Fallback estrutural se o arquivo não for achado ou der erro de CORS local
+                    this.log("Usando catálogo local.", "danger");
                     State.catalog = [
-                        { "Tipo": "Controladora Fallback", "Portas": 8, "Color": "#7c3aed" },
+                        { "Tipo": "Controladora Core", "Portas": 8, "Color": "#7c3aed" },
                         { "Tipo": "Switch PoE 24p", "Portas": 24, "Color": "#00d4ff" },
-                        { "Tipo": "Access Point Wi-Fi 6", "Portas": 1, "Radius": 185, "Color": "#10b981" }
+                        { "Tipo": "Access Point Wi-Fi 6", "Portas": 1, "Radius": 185, "Color": "#10b981" },
+                        { "Tipo": "Câmera IP 4K", "Portas": 1, "Radius": 130, "Color": "#ef4444" },
+                        { "Tipo": "Workstation Computador", "Portas": 1, "Color": "#e2e8f0" }
                     ];
                     this.renderCatalog();
                 }
@@ -493,6 +657,12 @@
 
             log(msg, type = 'system') {
                 document.getElementById('systemLog').innerText = `[${type.toUpperCase()}]: ${msg}`;
+            },
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
             },
 
             setMode(mode) {
@@ -508,11 +678,13 @@
                     State.runtime.selectedDevice = null;
                     this.updateInspector();
                 }
-                this.log(`Modo alterado para: ${mode.toUpperCase()}`);
+                this.log(`Modo: ${mode.toUpperCase()}`);
+                this.scheduleRender();
             },
 
             toggleLayer(layer) {
                 State.layers[layer] = document.getElementById(`layer-${layer}`).checked;
+                this.scheduleRender();
             },
 
             snap(val) {
@@ -526,7 +698,7 @@
                     const btn = document.createElement('button');
                     btn.className = 'btn asset-btn';
                     btn.onclick = () => this.addAssetToCanvas(item);
-                    btn.innerHTML = `<span>🖥️ ${item.Tipo}</span><span class="badge" style="background:rgba(0,212,255,0.1); padding:2px 6px; border-radius:10px;">${item.Portas}P</span>`;
+                    btn.innerHTML = `<span>🖥️ ${this.escapeHtml(item.Tipo)}</span><span class="badge" style="background:rgba(0,212,255,0.1); padding:2px 6px; border-radius:10px;">${item.Portas}P</span>`;
                     container.appendChild(btn);
                 });
             },
@@ -534,7 +706,6 @@
             addAssetToCanvas(proto) {
                 const scrollWrapper = document.getElementById('workspaceContainer');
                 
-                // Calcula o centro baseado na rolagem atual do usuário no mapa gigante
                 const targetX = this.snap(scrollWrapper.scrollLeft + (scrollWrapper.clientWidth / 2));
                 const targetY = this.snap(scrollWrapper.scrollTop + (scrollWrapper.clientHeight / 2));
 
@@ -544,6 +715,7 @@
                     color: proto.Color,
                     radius: proto.Radius || null,
                     ports: proto.Portas,
+                    portsData: {}, 
                     x: targetX,
                     y: targetY,
                     label: `${proto.Tipo.split(' ')[0]}_${State.project.devices.length + 1}`
@@ -552,15 +724,19 @@
                 this.setMode('select');
                 State.runtime.selectedDevice = newDevice;
                 this.updateInspector();
+                History.push();
+                this.scheduleRender();
             },
 
             deleteDevice(id) {
                 const dev = State.project.devices.find(d => d.id === id);
-                if (dev && confirm(`Deseja remover o dispositivo ${dev.label}?`)) {
+                if (dev && confirm(`Remover ${dev.label}?`)) {
                     State.project.links = State.project.links.filter(l => l.fromId !== id && l.toId !== id);
                     State.project.devices = State.project.devices.filter(d => d.id !== id);
                     State.runtime.selectedDevice = null;
                     this.updateInspector();
+                    History.push();
+                    this.scheduleRender();
                 }
             },
 
@@ -575,44 +751,97 @@
 
                 panel.classList.add('visible');
                 const deviceLinks = State.project.links.filter(l => l.fromId === dev.id || l.toId === dev.id);
+                
+                if (!dev.portsData) dev.portsData = {};
 
                 let html = `
                     <div>
                         <div class="sidebar-section-title">Ações do Ativo</div>
-                        <button class="btn btn-danger" style="width:100%; justify-content:center; margin-bottom:12px;" onclick="App.deleteDevice('${dev.id}')">🗑️ Remover Dispositivo</button>
+                        <button class="btn btn-danger" style="width:100%; justify-content:center; margin-bottom:12px;" onclick="App.deleteDevice('${dev.id}')">🗑️ Remover</button>
                         
                         <div class="sidebar-section-title">Propriedades</div>
                         <div class="device-info-card">
-                            <label style="color: var(--text-muted); font-size:10px;">TAG IDENTIFICADORA</label>
-                            <input type="text" value="${dev.label}" oninput="App.updateDeviceLabel('${dev.id}', this.value)">
-                            <div style="margin-top:10px; font-size:11px; color: var(--accent-cyan)">Arquitetura: ${dev.type}</div>
+                            <label style="color: var(--text-muted); font-size:10px;">TAG</label>
+                            <input type="text" value="${this.escapeHtml(dev.label)}" oninput="App.updateDeviceLabel('${dev.id}', this.value)">
+                            <div style="margin-top:10px; font-size:11px; color: var(--accent-cyan)">${this.escapeHtml(dev.type)}</div>
                         </div>
                     </div>
 
                     <div>
-                        <div class="sidebar-section-title">Portas Físicas Mapeadas</div>
+                        <div class="sidebar-section-title">Portas Físicas</div>
                         <div class="port-grid">
                 `;
 
                 for (let i = 1; i <= dev.ports; i++) {
-                    const isPortConnected = deviceLinks.some(l => (l.fromId === dev.id && l.fromPort === i) || (l.toId === dev.id && l.toPort === i));
+                    const linkVinculado = deviceLinks.find(l => (l.fromId === dev.id && l.fromPort === i) || (l.toId === dev.id && l.toPort === i));
+                    
                     let cName = 'port-box';
-                    if (isPortConnected) cName += ' connected';
+                    let customLabel = dev.portsData[i] === "Computador" ? "PC" : (dev.portsData[i] === "Impressora" ? "IMP" : `P${String(i).padStart(2, '0')}`);
+                    let inlineStyle = '';
 
-                    html += `<div class="${cName}">P${String(i).padStart(2, '0')}</div>`;
+                    if (linkVinculado) {
+                        cName += ' connected';
+                        const destinoIsTo = linkVinculado.fromId === dev.id;
+                        const vizinhoId = destinoIsTo ? linkVinculado.toId : linkVinculado.fromId;
+                        const vizinho = State.project.devices.find(d => d.id === vizinhoId);
+                        
+                        if (vizinho) {
+                            let tipoLower = vizinho.type.toLowerCase();
+                            let shortTag = 'NÓ';
+                            if (tipoLower.includes('workstation') || tipoLower.includes('computador')) shortTag = 'PC';
+                            else if (tipoLower.includes('switch')) shortTag = 'SW';
+                            else if (tipoLower.includes('access') || tipoLower.includes('point')) shortTag = 'AP';
+                            else if (tipoLower.includes('controladora')) shortTag = 'CTRL';
+
+                            customLabel = shortTag;
+                            inlineStyle = `style="border-color: ${vizinho.color}; color: ${vizinho.color}; font-weight: bold;"`;
+                        }
+                    } else if (dev.portsData[i] && dev.portsData[i] !== "Nenhum") {
+                        cName += ' connected';
+                        inlineStyle = `style="border-color: var(--accent-emerald); color: var(--accent-emerald); font-weight: bold;"`;
+                    }
+
+                    html += `<div class="${cName}" ${inlineStyle}>${customLabel}</div>`;
+                }
+
+                html += `</div></div>`;
+
+                const tipoAtivoLower = dev.type.toLowerCase();
+                if (tipoAtivoLower.includes('switch') || tipoAtivoLower.includes('controladora') || tipoAtivoLower.includes('firewall')) {
+                    html += `
+                        <div>
+                            <div class="sidebar-section-title">Atribuição de Terminais</div>
+                            <p style="color: var(--text-muted); font-size:10px; margin-bottom:8px;">Dispositivo conectado:</p>
+                            <div style="display:flex; flex-direction:column; gap:8px; background:var(--surface-2); padding:10px; border:1px solid var(--border-tech);">
+                                <label style="font-size:10px; color:var(--text-muted)">Porta:</label>
+                                <select id="inspectorPortSelector" style="background:var(--bg-deep); color:#fff; border:1px solid var(--border-tech); padding:4px;" onchange="App.updatePortTerminalSelector('${dev.id}')">
+                    `;
+
+                    for(let i = 1; i <= dev.ports; i++) {
+                        html += `<option value="${i}">Porta ${String(i).padStart(2, '0')} (${dev.portsData[i] || 'Vazia'})</option>`;
+                    }
+
+                    html += `
+                                </select>
+                                <label style="font-size:10px; color:var(--text-muted); margin-top:4px;">Dispositivo:</label>
+                                <select id="inspectorTerminalType" style="background:var(--bg-deep); color:#fff; border:1px solid var(--border-tech); padding:4px;" onchange="App.savePortTerminal('${dev.id}')">
+                                    <option value="Nenhum">Nenhum / Vazia</option>
+                                    <option value="Computador">Computador (PC)</option>
+                                    <option value="Impressora">Impressora (PRN)</option>
+                                </select>
+                            </div>
+                        </div>
+                    `;
                 }
 
                 html += `
-                        </div>
-                    </div>
-
                     <div>
-                        <div class="sidebar-section-title">Roteamento Logístico</div>
+                        <div class="sidebar-section-title">Roteamento</div>
                         <div class="connection-list">
                 `;
 
                 if (deviceLinks.length === 0) {
-                    html += `<div style="color: var(--text-muted); font-size:11px; font-style:italic;">Nenhum cabo trançado.</div>`;
+                    html += `<div style="color: var(--text-muted); font-size:11px; font-style:italic;">Nenhum cabo.</div>`;
                 } else {
                     deviceLinks.forEach(link => {
                         const targetIsTo = link.fromId === dev.id;
@@ -625,7 +854,7 @@
                         html += `
                             <div class="connection-item">
                                 <div>
-                                    <span style="color: var(--accent-cyan)">P.${localPort}</span> ➔ <span>${targetLabel} [P.${targetPort}]</span>
+                                    <span style="color: var(--accent-cyan)">P.${localPort}</span> ➔ <span>${this.escapeHtml(targetLabel)} [P.${targetPort}]</span>
                                 </div>
                                 <button class="btn-disconnect" onclick="App.removeLink('${link.id}')">✕</button>
                             </div>
@@ -635,33 +864,70 @@
 
                 html += `</div></div>`;
                 panel.innerHTML = html;
+                this.updatePortTerminalSelector(dev.id);
+            },
+
+            updatePortTerminalSelector(id) {
+                const dev = State.project.devices.find(d => d.id === id);
+                const selector = document.getElementById('inspectorPortSelector');
+                const typeInput = document.getElementById('inspectorTerminalType');
+                
+                if (selector && typeInput) {
+                    const portaSelecionada = selector.value;
+                    typeInput.value = dev.portsData[portaSelecionada] || "Nenhum";
+                }
+            },
+
+            savePortTerminal(id) {
+                const dev = State.project.devices.find(d => d.id === id);
+                const portaSelecionada = document.getElementById('inspectorPortSelector').value;
+                const tipoTerminal = document.getElementById('inspectorTerminalType').value;
+                
+                dev.portsData[portaSelecionada] = tipoTerminal;
+                this.updateInspector();
+                History.push();
+                this.scheduleRender();
+                this.log(`Porta ${portaSelecionada}: ${tipoTerminal}`);
             },
 
             updateDeviceLabel(id, val) {
                 const dev = State.project.devices.find(d => d.id === id);
-                if (dev) dev.label = val;
+                if (dev) {
+                    dev.label = val;
+                    this.scheduleRender();
+                }
             },
 
             removeLink(linkId) {
                 State.project.links = State.project.links.filter(l => l.id !== linkId);
                 this.updateInspector();
+                History.push();
+                this.scheduleRender();
             },
 
             clearCanvas() {
-                if (confirm("Limpar toda a infraestrutura desenhada?")) {
-                    State.project.walls = []; State.project.devices = []; State.project.links = [];
-                    State.project.blueprintData = null; State.runtime.blueprintImage = null; State.runtime.selectedDevice = null;
+                if (confirm("Limpar tudo?")) {
+                    State.project.walls = []; 
+                    State.project.devices = []; 
+                    State.project.links = [];
+                    State.project.blueprintData = null; 
+                    State.runtime.blueprintImage = null; 
+                    State.runtime.selectedDevice = null;
                     this.updateInspector();
+                    History.push();
+                    this.scheduleRender();
                 }
             },
 
             exportProject() {
-                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(State.project));
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(State.project, null, 2));
                 const downloadAnchor = document.createElement('a');
                 downloadAnchor.setAttribute("href", dataStr);
-                downloadAnchor.setAttribute("download", "infra_completa.json");
+                downloadAnchor.setAttribute("download", `netmap_${Date.now()}.json`);
                 document.body.appendChild(downloadAnchor);
-                downloadAnchor.click(); downloadAnchor.remove();
+                downloadAnchor.click(); 
+                downloadAnchor.remove();
+                this.log('Projeto exportado');
             },
 
             importProject(jsonData) {
@@ -672,13 +938,51 @@
                         State.runtime.selectedDevice = null;
                         if (State.project.blueprintData) {
                             const img = new Image();
-                            img.onload = () => { State.runtime.blueprintImage = img; };
+                            img.onload = () => { 
+                                State.runtime.blueprintImage = img;
+                                this.scheduleRender();
+                            };
                             img.src = State.project.blueprintData;
                         }
                         this.updateInspector();
-                        this.log("Projeto carregado com sucesso.");
+                        History.push();
+                        this.scheduleRender();
+                        this.log("Projeto carregado");
                     }
-                } catch (e) { this.log("Estrutura do arquivo JSON inválida.", "danger"); }
+                } catch (e) { 
+                    this.log("JSON inválido", "danger"); 
+                }
+            },
+
+            showPortModal(device, callback) {
+                const modal = document.createElement('div');
+                modal.className = 'modal-overlay';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <h3>Selecionar Porta - ${this.escapeHtml(device.label)}</h3>
+                        <label style="color: var(--text-muted); font-size: 11px;">Porta (1-${device.ports}):</label>
+                        <input type="number" id="modalPortInput" min="1" max="${device.ports}" value="1" />
+                        <div class="modal-buttons">
+                            <button class="btn" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
+                            <button class="btn btn-primary" onclick="App.confirmPortModal(${device.ports})">Confirmar</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                modal.callback = callback;
+            },
+
+            confirmPortModal(maxPorts) {
+                const modal = document.querySelector('.modal-overlay');
+                const input = document.getElementById('modalPortInput');
+                const port = parseInt(input.value);
+                
+                if (port >= 1 && port <= maxPorts) {
+                    modal.callback(port);
+                    modal.remove();
+                } else {
+                    alert(`Porta deve ser entre 1 e ${maxPorts}`);
+                }
             },
 
             registerEvents() {
@@ -688,7 +992,12 @@
                     const reader = new FileReader();
                     reader.onload = (event) => {
                         const img = new Image();
-                        img.onload = () => { State.runtime.blueprintImage = img; State.project.blueprintData = event.target.result; };
+                        img.onload = () => { 
+                            State.runtime.blueprintImage = img; 
+                            State.project.blueprintData = event.target.result;
+                            History.push();
+                            this.scheduleRender();
+                        };
                         img.src = event.target.result;
                     };
                     if (e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
@@ -697,7 +1006,7 @@
                 document.getElementById('projectLoad').addEventListener('change', (e) => {
                     const reader = new FileReader();
                     reader.onload = (event) => this.importProject(event.target.result);
-                    if (e.target.files[0]) reader.readAsText(event.target.files[0]);
+                    if (e.target.files[0]) reader.readAsText(e.target.files[0]);
                 });
 
                 canvas.addEventListener('mousemove', (e) => {
@@ -711,6 +1020,11 @@
                     if (State.currentMode === 'select' && State.runtime.draggedDevice) {
                         State.runtime.draggedDevice.x = this.snap(mouseX - State.runtime.dragOffset.x);
                         State.runtime.draggedDevice.y = this.snap(mouseY - State.runtime.dragOffset.y);
+                        this.scheduleRender();
+                    }
+
+                    if (State.currentMode === 'wall' || State.currentMode === 'rect' || State.currentMode === 'link') {
+                        this.scheduleRender();
                     }
                 });
 
@@ -729,7 +1043,6 @@
                         }
                     }
 
-                    // MODO APAGADOR 
                     if (State.currentMode === 'eraser' && State.layers.construction) {
                         const wallIndex = State.project.walls.findIndex(w => {
                             const A = mouseX - w.x1; const B = mouseY - w.y1;
@@ -750,12 +1063,13 @@
 
                         if (wallIndex !== -1) {
                             State.project.walls.splice(wallIndex, 1);
-                            this.log("Segmento de parede removido.");
+                            History.push();
+                            this.scheduleRender();
+                            this.log("Parede removida");
                             return;
                         }
                     }
 
-                    // MODO PONTEIRO
                     if (State.currentMode === 'select') {
                         if (clickedDevice) {
                             State.runtime.selectedDevice = clickedDevice;
@@ -765,9 +1079,9 @@
                             State.runtime.selectedDevice = null; 
                         }
                         this.updateInspector();
+                        this.scheduleRender();
                     }
 
-                    // MODO PAREDES
                     if (State.currentMode === 'wall' && State.layers.construction) {
                         const sx = this.snap(mouseX); const sy = this.snap(mouseY);
                         if (!State.runtime.activeWallStart) {
@@ -775,12 +1089,13 @@
                         } else {
                             if (State.runtime.activeWallStart.x !== sx || State.runtime.activeWallStart.y !== sy) {
                                 State.project.walls.push({ x1: State.runtime.activeWallStart.x, y1: State.runtime.activeWallStart.y, x2: sx, y2: sy });
+                                History.push();
                             }
                             State.runtime.activeWallStart = { x: sx, y: sy };
                         }
+                        this.scheduleRender();
                     }
 
-                    // MODO ÁREAS
                     if (State.currentMode === 'rect' && State.layers.construction) {
                         const sx = this.snap(mouseX); const sy = this.snap(mouseY);
                         if (!State.runtime.activeRectStart) {
@@ -796,68 +1111,152 @@
                                 State.project.walls.push({ x1: x2, y1: y1, x2: x2, y2: y2 }); 
                                 State.project.walls.push({ x1: x2, y1: y2, x2: x1, y2: y2 }); 
                                 State.project.walls.push({ x1: x1, y1: y2, x2: x1, y2: y1 }); 
-                                this.log("Paredes modulares do cômodo estabelecidas.");
+                                History.push();
+                                this.log("Cômodo criado");
                             }
                             State.runtime.activeRectStart = null;
                         }
+                        this.scheduleRender();
                     }
 
-                    // MODO LINKAR
                     if (State.currentMode === 'link' && clickedDevice) {
                         if (!State.runtime.activeLinkSource) {
                             State.runtime.activeLinkSource = clickedDevice;
+                            this.log(`Origem: ${clickedDevice.label}`);
+                            this.scheduleRender();
                         } else {
                             const src = State.runtime.activeLinkSource;
                             if (src.id !== clickedDevice.id) {
-                                const pSrcStr = prompt(`Conexão saindo de ${src.label} (Total: ${src.ports} portas).\nPorta de ORIGEM:`, "1");
-                                const pDstStr = prompt(`Conexão chegando em ${clickedDevice.label} (Total: ${clickedDevice.ports} portas).\nPorta de DESTINO:`, "1");
-                                
-                                const pSrc = parseInt(pSrcStr); const pDst = parseInt(pDstStr);
+                                let pSrc = 1;
+                                let pDst = 1;
 
-                                if (pSrc >= 1 && pSrc <= src.ports && pDst >= 1 && pDst <= clickedDevice.ports) {
+                                const createLink = (srcPort, dstPort) => {
                                     State.project.links.push({
-                                        id: 'link_' + Date.now(), fromId: src.id, fromPort: pSrc, toId: clickedDevice.id, toPort: pDst
+                                        id: 'link_' + Date.now(), 
+                                        fromId: src.id, 
+                                        fromPort: srcPort, 
+                                        toId: clickedDevice.id, 
+                                        toPort: dstPort
                                     });
+                                    History.push();
+                                    this.scheduleRender();
+                                    this.log(`Link: ${src.label} [P${srcPort}] ➔ ${clickedDevice.label} [P${dstPort}]`);
+                                    State.runtime.activeLinkSource = null;
+                                    this.setMode('select');
+                                };
+
+                                if (src.ports > 1) {
+                                    this.showPortModal(src, (srcPort) => {
+                                        pSrc = srcPort;
+                                        if (clickedDevice.ports > 1) {
+                                            this.showPortModal(clickedDevice, (dstPort) => {
+                                                pDst = dstPort;
+                                                createLink(pSrc, pDst);
+                                            });
+                                        } else {
+                                            createLink(pSrc, 1);
+                                        }
+                                    });
+                                } else if (clickedDevice.ports > 1) {
+                                    this.showPortModal(clickedDevice, (dstPort) => {
+                                        pDst = dstPort;
+                                        createLink(1, pDst);
+                                    });
+                                } else {
+                                    createLink(1, 1);
                                 }
+                            } else {
+                                State.runtime.activeLinkSource = null;
+                                this.scheduleRender();
                             }
-                            State.runtime.activeLinkSource = null;
-                            this.setMode('select');
                         }
                     }
                 });
 
-                window.addEventListener('mouseup', () => { State.runtime.draggedDevice = null; });
-                window.addEventListener('keydown', (e) => { if (e.key === 'Escape') { State.runtime.activeWallStart = null; State.runtime.activeRectStart = null; State.runtime.activeLinkSource = null; this.updateInspector(); } });
-            },
+                window.addEventListener('mouseup', () => { 
+                    if (State.runtime.draggedDevice) {
+                        History.push();
+                    }
+                    State.runtime.draggedDevice = null; 
+                });
 
-            loop() {
-                App.render();
-                requestAnimationFrame(App.loop);
+                window.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') { 
+                        State.runtime.activeWallStart = null; 
+                        State.runtime.activeRectStart = null; 
+                        State.runtime.activeLinkSource = null; 
+                        this.updateInspector();
+                        this.scheduleRender();
+                    }
+                    
+                    if (e.ctrlKey && e.key === 'z') {
+                        e.preventDefault();
+                        History.undo();
+                    }
+                    
+                    if (e.ctrlKey && e.key === 'y') {
+                        e.preventDefault();
+                        History.redo();
+                    }
+                    
+                    if (e.ctrlKey && e.key === 's') {
+                        e.preventDefault();
+                        this.exportProject();
+                    }
+                    
+                    if (e.key === 'Delete' && State.runtime.selectedDevice) {
+                        this.deleteDevice(State.runtime.selectedDevice.id);
+                    }
+                    
+                    if (e.key >= '1' && e.key <= '5' && !e.ctrlKey && !e.altKey) {
+                        const modes = ['select', 'wall', 'rect', 'link', 'eraser'];
+                        this.setMode(modes[parseInt(e.key) - 1]);
+                    }
+                });
+
+                window.addEventListener('resize', () => {
+                    this.setupCanvas();
+                    this.scheduleRender();
+                });
             },
 
             render() {
                 const ctx = this.ctx;
-                ctx.clearRect(0, 0, 4000, 3000);
+                ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-                // 1. Planta Baixa
                 if (State.layers.construction && State.runtime.blueprintImage) {
-                    ctx.save(); ctx.globalAlpha = 0.35; ctx.drawImage(State.runtime.blueprintImage, 0, 0); ctx.restore();
+                    ctx.save(); 
+                    ctx.globalAlpha = 0.35; 
+                    ctx.drawImage(State.runtime.blueprintImage, 0, 0); 
+                    ctx.restore();
                 }
 
-                // 2. Camada Estrutural (Paredes)
                 if (State.layers.construction) {
-                    ctx.lineWidth = 4; ctx.lineCap = "round"; ctx.strokeStyle = varColor('--border-tech');
-                    State.project.walls.forEach(w => { ctx.beginPath(); ctx.moveTo(w.x1, w.y1); ctx.lineTo(w.x2, w.y2); ctx.stroke(); });
+                    ctx.lineWidth = 4; 
+                    ctx.lineCap = "round"; 
+                    ctx.strokeStyle = varColor('--border-tech');
+                    State.project.walls.forEach(w => { 
+                        ctx.beginPath(); 
+                        ctx.moveTo(w.x1, w.y1); 
+                        ctx.lineTo(w.x2, w.y2); 
+                        ctx.stroke(); 
+                    });
 
                     if (State.currentMode === 'wall' && State.runtime.activeWallStart) {
-                        ctx.lineWidth = 2; ctx.strokeStyle = varColor('--accent-purple'); ctx.setLineDash([4, 4]);
-                        ctx.beginPath(); ctx.moveTo(State.runtime.activeWallStart.x, State.runtime.activeWallStart.y);
+                        ctx.lineWidth = 2; 
+                        ctx.strokeStyle = varColor('--accent-purple'); 
+                        ctx.setLineDash([4, 4]);
+                        ctx.beginPath(); 
+                        ctx.moveTo(State.runtime.activeWallStart.x, State.runtime.activeWallStart.y);
                         ctx.lineTo(this.snap(State.runtime.mouseCanvasPos.x), this.snap(State.runtime.mouseCanvasPos.y));
-                        ctx.stroke(); ctx.setLineDash([]);
+                        ctx.stroke(); 
+                        ctx.setLineDash([]);
                     }
 
                     if (State.currentMode === 'rect' && State.runtime.activeRectStart) {
-                        ctx.lineWidth = 2; ctx.strokeStyle = varColor('--accent-emerald'); ctx.setLineDash([4, 4]);
+                        ctx.lineWidth = 2; 
+                        ctx.strokeStyle = varColor('--accent-emerald'); 
+                        ctx.setLineDash([4, 4]);
                         const curW = this.snap(State.runtime.mouseCanvasPos.x) - State.runtime.activeRectStart.x;
                         const curH = this.snap(State.runtime.mouseCanvasPos.y) - State.runtime.activeRectStart.y;
                         ctx.strokeRect(State.runtime.activeRectStart.x, State.runtime.activeRectStart.y, curW, curH);
@@ -865,7 +1264,6 @@
                     }
                 }
 
-                // 3. Links / Enlaces
                 if (State.layers.links) {
                     ctx.lineWidth = 2;
                     State.project.links.forEach(link => {
@@ -873,10 +1271,14 @@
                         const toNode = State.project.devices.find(d => d.id === link.toId);
                         
                         if (fromNode && toNode) {
-                            ctx.beginPath(); ctx.strokeStyle = varColor('--accent-cyan');
-                            ctx.moveTo(fromNode.x, fromNode.y); ctx.lineTo(toNode.x, toNode.y); ctx.stroke();
+                            ctx.beginPath(); 
+                            ctx.strokeStyle = varColor('--accent-cyan');
+                            ctx.moveTo(fromNode.x, fromNode.y); 
+                            ctx.lineTo(toNode.x, toNode.y); 
+                            ctx.stroke();
 
-                            ctx.fillStyle = '#fff'; ctx.font = "bold 9px 'JetBrains Mono'";
+                            ctx.fillStyle = '#fff'; 
+                            ctx.font = "bold 9px 'JetBrains Mono'";
                             const p1X = fromNode.x + (toNode.x - fromNode.x) * 0.22;
                             const p1Y = fromNode.y + (toNode.y - fromNode.y) * 0.22;
                             const p2X = fromNode.x + (toNode.x - fromNode.x) * 0.78;
@@ -888,21 +1290,30 @@
                     });
 
                     if (State.currentMode === 'link' && State.runtime.activeLinkSource) {
-                        ctx.strokeStyle = varColor('--accent-cyan'); ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]);
-                        ctx.beginPath(); ctx.moveTo(State.runtime.activeLinkSource.x, State.runtime.activeLinkSource.y);
+                        ctx.strokeStyle = varColor('--accent-cyan'); 
+                        ctx.lineWidth = 1.5; 
+                        ctx.setLineDash([5, 4]);
+                        ctx.beginPath(); 
+                        ctx.moveTo(State.runtime.activeLinkSource.x, State.runtime.activeLinkSource.y);
                         ctx.lineTo(State.runtime.mouseCanvasPos.x, State.runtime.mouseCanvasPos.y);
-                        ctx.stroke(); ctx.setLineDash([]);
+                        ctx.stroke(); 
+                        ctx.setLineDash([]);
                     }
                 }
 
-                // 4. Ativos
                 if (State.layers.devices) {
                     State.project.devices.forEach(dev => {
                         const isSelected = State.runtime.selectedDevice && State.runtime.selectedDevice.id === dev.id;
                         if (dev.radius && isSelected) {
-                            ctx.beginPath(); ctx.arc(dev.x, dev.y, dev.radius, 0, Math.PI * 2);
-                            ctx.fillStyle = hexToRgbA(dev.color, 0.05); ctx.fill();
-                            ctx.strokeStyle = dev.color; ctx.lineWidth = 1; ctx.setLineDash([6, 4]); ctx.stroke(); ctx.setLineDash([]);
+                            ctx.beginPath(); 
+                            ctx.arc(dev.x, dev.y, dev.radius, 0, Math.PI * 2);
+                            ctx.fillStyle = hexToRgbA(dev.color, 0.05); 
+                            ctx.fill();
+                            ctx.strokeStyle = dev.color; 
+                            ctx.lineWidth = 1; 
+                            ctx.setLineDash([6, 4]); 
+                            ctx.stroke(); 
+                            ctx.setLineDash([]);
                         }
                     });
 
@@ -910,15 +1321,19 @@
                         const isSelected = State.runtime.selectedDevice && State.runtime.selectedDevice.id === dev.id;
                         
                         ctx.save();
-                        ctx.beginPath(); ctx.arc(dev.x, dev.y, 18, 0, Math.PI * 2);
-                        ctx.fillStyle = varColor('--surface-1'); ctx.fill();
+                        ctx.beginPath(); 
+                        ctx.arc(dev.x, dev.y, 18, 0, Math.PI * 2);
+                        ctx.fillStyle = varColor('--surface-1'); 
+                        ctx.fill();
                         
                         ctx.lineWidth = isSelected ? 3 : 1.5;
                         ctx.strokeStyle = isSelected ? varColor('--accent-cyan') : dev.color;
                         ctx.stroke();
 
                         ctx.fillStyle = isSelected ? varColor('--accent-cyan') : dev.color;
-                        ctx.font = "bold 9px 'JetBrains Mono'"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+                        ctx.font = "bold 9px 'JetBrains Mono'"; 
+                        ctx.textAlign = "center"; 
+                        ctx.textBaseline = "middle";
                         const coreLabel = dev.type.split(' ').map(w => w[0]).join('').substring(0, 3).toUpperCase();
                         ctx.fillText(coreLabel, dev.x, dev.y);
 
@@ -928,10 +1343,21 @@
                         ctx.restore();
                     });
                 }
+            },
+
+            undo() {
+                History.undo();
+            },
+
+            redo() {
+                History.redo();
             }
         };
 
-        function varColor(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+        function varColor(name) { 
+            return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); 
+        }
+
         function hexToRgbA(hex, alpha) {
             let c = hex.substring(1).split('');
             if (c.length == 3) c = [c[0], c[0], c[1], c[1], c[2], c[2]];
