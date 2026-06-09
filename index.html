@@ -920,39 +920,88 @@
             },
 
             exportProject() {
-                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(State.project, null, 2));
-                const downloadAnchor = document.createElement('a');
-                downloadAnchor.setAttribute("href", dataStr);
-                downloadAnchor.setAttribute("download", `netmap_${Date.now()}.json`);
-                document.body.appendChild(downloadAnchor);
-                downloadAnchor.click(); 
-                downloadAnchor.remove();
-                this.log('Projeto exportado');
+                // 1. Cria um objeto compactado
+                const compact = {
+                    b: State.project.blueprintData, // blueprintData
+                    w: State.project.walls.map(w => [w.x1, w.y1, w.x2, w.y2]), // Array de arrays é menor que objetos
+                    d: State.project.devices.map(d => ({
+                        i: d.id,          // id
+                        t: d.type,        // type
+                        c: d.color,       // color
+                        p: d.ports,       // ports
+                        pd: Object.keys(d.portsData || {}).length ? d.portsData : null, // portsData (só salva se tiver dados)
+                        x: d.x, 
+                        y: d.y, 
+                        l: d.label        // label
+                    })),
+                    l: State.project.links.map(lk => [lk.fromId, lk.fromPort, lk.toId, lk.toPort]) // Array de arrays
+                };
+            
+                // 2. Converte para string SEM espaços (null, 2 é removido)
+                const jsonString = JSON.stringify(compact);
+                
+                // 3. Cria o download
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `netmap_compact_${Date.now()}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                this.log('Projeto exportado (Compactado)');
             },
 
             importProject(jsonData) {
-                try {
-                    const parsed = JSON.parse(jsonData);
-                    if (parsed.devices && parsed.links) {
-                        State.project = parsed;
-                        State.runtime.selectedDevice = null;
-                        if (State.project.blueprintData) {
-                            const img = new Image();
-                            img.onload = () => { 
-                                State.runtime.blueprintImage = img;
-                                this.scheduleRender();
-                            };
-                            img.src = State.project.blueprintData;
-                        }
-                        this.updateInspector();
-                        History.push();
+            try {
+                const compact = JSON.parse(jsonData);
+                
+                // Reconstrói o objeto original a partir do formato compactado
+                const restored = {
+                    blueprintData: compact.b || null,
+                    walls: (compact.w || []).map(w => ({ x1: w[0], y1: w[1], x2: w[2], y2: w[3] })),
+                    devices: (compact.d || []).map(d => ({
+                        id: d.i,
+                        type: d.t,
+                        color: d.c,
+                        ports: d.p,
+                        portsData: d.pd || {},
+                        x: d.x,
+                        y: d.y,
+                        label: d.l
+                    })),
+                    links: (compact.l || []).map((lk, index) => ({
+                        id: lk.id || `link_imp_${index}`, // Mantém ID antigo ou gera novo
+                        fromId: lk[0],
+                        fromPort: lk[1],
+                        toId: lk[2],
+                        toPort: lk[3]
+                    }))
+                };
+        
+                State.project = restored;
+                State.runtime.selectedDevice = null;
+                
+                if (State.project.blueprintData) {
+                    const img = new Image();
+                    img.onload = () => { 
+                        State.runtime.blueprintImage = img;
                         this.scheduleRender();
-                        this.log("Projeto carregado");
-                    }
-                } catch (e) { 
-                    this.log("JSON inválido", "danger"); 
+                    };
+                    img.src = State.project.blueprintData;
                 }
-            },
+                
+                this.updateInspector();
+                History.push();
+                this.scheduleRender();
+                this.log("Projeto carregado e descompactado");
+            } catch (e) { 
+                this.log("Erro ao ler arquivo JSON", "danger"); 
+                console.error(e);
+            }
+        },
 
             showPortModal(device, callback) {
                 const modal = document.createElement('div');
